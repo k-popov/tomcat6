@@ -35,13 +35,6 @@ end
 
 # TODO user and group management
 
-directory "#{node[:tomcat6][:tomcat_home]}" do
-    action :create
-    owner node[:tomcat6][:default_owner]
-    group node[:tomcat6][:default_group]
-    mode "0755"
-end
-
 # Prepare a temporary directory
 require 'tmpdir'
 setup_tmp_dir = Dir.mktmpdir
@@ -96,13 +89,26 @@ else
     Chef::Log.debug("Specified URL for downloading: #{url}")
 end
 
-
+distr_unpack_dir = File.join( node[:tomcat6][:tomcat_home].split('/')[0..-2],'/')
 
 # extract the distro
 execute "extract-tomcat" do
     command "tar xvzf #{setup_tmp_dir}/tomcat-distro.tar.gz"
-    cwd "#{node[:tomcat6][:tomcat_home]}"
+    # extract the archive to the directory one level higher that tomcat_home
+    cwd distr_unpack_dir
     path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
+end
+
+# tomcat will be unpacket to smth like "apache-tomcat-6.X.YZ"
+# the following block will move it to node[:tomcat6][:config_dir]
+ruby_block "move-tomcat-to tomcat_home" do
+    block do
+        #get name of the directory the distr was unpacked to
+        tomcat_unpacked_name = url.split('/')[-1].gsub(/(.*)\.tar\.gz/, '\1')
+
+        # move tomcat to it's home
+        File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:config_dir])
+    end
 end
 
 # Sometimes it's better to keep config in a some safe place
