@@ -47,6 +47,8 @@ require 'tmpdir'
 setup_tmp_dir = Dir.mktmpdir
 File::chmod(0777, setup_tmp_dir)
 
+url = ""
+
 # download the distro
 distr_download =    remote_file "#{setup_tmp_dir}/tomcat-distro.tar.gz" do
                         source "#{url}"
