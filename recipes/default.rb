@@ -26,11 +26,14 @@ if ( node[:tomcat6][:install_java] )
 end
 
 # cleanup the previous installation of requested
-if File.directory?(node[:tomcat6][:tomcat_home]) && node[:tomcat6][:force_reinstall]
-    directory "#{node[:tomcat6][:tomcat_home]}" do
-        action :delete
-        recursive true
-    end
+if File.directory?(node[:tomcat6][:tomcat_home])
+    if node[:tomcat6][:force_reinstall]
+        directory "#{node[:tomcat6][:tomcat_home]}" do
+            action :delete
+            recursive true
+        end
+    else
+        Chef::Log.fatal("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
 end
 
 # TODO user and group management
@@ -130,7 +133,7 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
             action :create
         end
         # compatability link
-        link "#{node[:tomcat6][:tomcat_home]}/conf}" do
+        link "#{node[:tomcat6][:tomcat_home]}/conf" do
             to node[:tomcat6][:config_dir]
             action :create
         end
