@@ -6,7 +6,7 @@ default[:tomcat6][:install_java] = true
 # (java will be installed only if the existing version is older than specified here)
 default[:tomcat6][:min_java_version] = "1.6.0_31"
 # JAVA_HOME in for example init script
-default[:tomcat6][:java_home] = "/usr"
+default[:tomcat6][:java_home] = "/usr/java/default"
 
 # directory to install Tomcat to
 default[:tomcat6][:tomcat_home] = "/opt/tomcat6"
