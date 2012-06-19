@@ -66,7 +66,7 @@ if ( ! node[:tomcat6][:download_url] ) || node[:tomcat6][:download_url].empty?
                 end
             end
             # add a trailing "/" if it's missing
-            url = node[:tomcat6][:download_mirror].match(/\/$/) ? [:tomcat6][:download_mirror] : "#{[:tomcat6][:download_mirror]}/"
+            url = node[:tomcat6][:download_mirror].match(/\/$/) ? node[:tomcat6][:download_mirror] : "#{node[:tomcat6][:download_mirror]}/"
             # build the complete URL. match() is used to remove 'v' in version string
             url = "#{url}#{latest}/bin/apache-tomcat-#{latest.match(/[0-9.]+/)}.tar.gz"
             Chef::Log.info("Automatically selected version: #{latest}")
