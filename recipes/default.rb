@@ -47,6 +47,17 @@ require 'tmpdir'
 setup_tmp_dir = Dir.mktmpdir
 File::chmod(0777, setup_tmp_dir)
 
+# download the distro
+distr_download =    remote_file "#{setup_tmp_dir}/tomcat-distro.tar.gz" do
+                        source "#{url}"
+                        mode "0644"
+                        if (! url) || url.empty?
+                            action :nothing
+                        else
+                            action :create
+                        end
+                    end
+
 # select a version to download
 if ( ! node[:tomcat6][:download_url] ) || node[:tomcat6][:download_url].empty?
 # Find the latest tomcat 6 version
@@ -70,21 +81,20 @@ if ( ! node[:tomcat6][:download_url] ) || node[:tomcat6][:download_url].empty?
             # build the complete URL. match() is used to remove 'v' in version string
             url = "#{url}#{latest}/bin/apache-tomcat-#{latest.match(/[0-9.]+/)}.tar.gz"
             Chef::Log.info("Automatically selected version: #{latest}")
-            Chef::Log.debug("Auto URL for downloading: #{url}")
+            Chef::Log.debug("Setting Auto URL for downloading: #{url}")
+            # change download resource properties
+            distr_download.source( url )
+            distr_download.run_action :create
         end
         action :create
     end
 else
-# download the version selected
+# use the version selected
     url = node[:tomcat6][:download_url]
     Chef::Log.debug("Specified URL for downloading: #{url}")
 end
 
-# download the distro
-remote_file "#{setup_tmp_dir}/tomcat-distro.tar.gz" do
-    source "#{url}"
-    mode "0644"
-end
+
 
 # extract the distro
 execute "extract-tomcat" do
