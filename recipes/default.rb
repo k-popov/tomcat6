@@ -143,8 +143,15 @@ end
 ruby_block "add-admin" do
     block do
         admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{node[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
-        File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml", 'a') do |f|
-            f.write("\n#{admin_string}\n")
+        orig_lines = File.readlines("#{node[:tomcat6][:config_dir]}/tomcat-users.xml")
+
+        File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml",'w') do |thefile|
+            orig_lines.each do |line|
+                thefile.write(line)
+                if line.match('<tomcat-users>')
+                    thefile.write("#{admin_string}\n")
+                end
+            end
         end
     end
     action :create
