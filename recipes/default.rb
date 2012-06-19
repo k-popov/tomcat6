@@ -101,13 +101,13 @@ end
 
 # tomcat will be unpacket to smth like "apache-tomcat-6.X.YZ"
 # the following block will move it to node[:tomcat6][:config_dir]
-ruby_block "move-tomcat-to tomcat_home" do
+ruby_block "move-tomcat-to-tomcat_home" do
     block do
         #get name of the directory the distr was unpacked to
         tomcat_unpacked_name = url.split('/')[-1].gsub(/(.*)\.tar\.gz/, '\1')
 
         # move tomcat to it's home
-        File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:config_dir])
+        File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:tomcat_home])
     end
 end
 
