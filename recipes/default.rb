@@ -88,6 +88,35 @@ execute "extract-tomcat" do
     path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
 end
 
+# Sometimes it's better to keep config in a some safe place
+if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
+    # place config directory in a safe place
+    if ! File.directory?(node[:tomcat6][:config_dir]) # preserve the existing config dir.
+        # ensure this place exists
+        directory "#{node[:tomcat6][:config_dir]}" do
+            action :create
+            owner node[:default_owner]
+            group node[:default_group]
+            recursive true
+        end
+        # move the config directory
+        File.rename("#{node[:tomcat6][:tomcat_home]}/conf", node[:tomcat6][:config_dir])
+        # compatability link
+        link "#{node[:tomcat6][:tomcat_home]}/conf}" do
+            to node[:tomcat6][:config_dir]
+            action :create
+        end
+    else
+        Chef::Log.info("Config directory #{node[:tomcat6][:config_dir]} exists. Not replacing with a new one.")
+    end
+end
+
+# add a service user to tomcat administrators list (alter conf/tomcat-users.xml)
+admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
+File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml", 'a') do |f|
+    f.write("\n#{admin_string}\n")
+end
+
 # fix permissions for directories required to be writeable
 ["logs", "temp", "work", "webapps"].each do |dir|
     directory "#{node[:tomcat6][:tomcat_home]}/#{dir}" do
@@ -98,4 +127,12 @@ end
     end
 end
 
+template "/etc/init.d/tomcat" do
+    source "tomcat_init.erb"
+    mode "0755"
+end
 
+service "tomcat" do
+    supports :restart => true
+    action [ :enable, :start ]
+end

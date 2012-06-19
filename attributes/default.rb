@@ -10,6 +10,8 @@ default[:tomcat6][:java_home] = "/usr"
 
 # directory to install Tomcat to
 default[:tomcat6][:tomcat_home] = "/opt/tomcat6"
+# may be it's worth placing the configuration directory in a different place (i.e. /usr/local/etc)
+default[:tomcat6][:config_dir] = "#{node[:tomcat6][:tomcat_home]}/conf"
 # remove the previous tomcat installation or not
 default[:tomcat6][:force_reinstall] = false
 
@@ -25,5 +27,12 @@ default[:tomcat6][:group] = "root"
 default[:tomcat6][:default_owner] = "root"
 default[:tomcat6][:default_group] = "root"
 
+# either specify your own URL to get tomcat from
+# or leave it empty and give a valid tomcat mirror. Latest version will be used then.
 default[:tomcat6][:download_url] = ""
 default[:tomcat6][:download_mirror] = "http://www.sai.msu.su/apache/tomcat/tomcat-6/"
+
+# username and password to be used with "/manager" webapp for deploy/undeploy
+default[:tomcat6][:tomcat_admin_login] = "tc-admin"
+default[:tomcat6][:tomcat_admin_password] = "nimda-ct"
+
