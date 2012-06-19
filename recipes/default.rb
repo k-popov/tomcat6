@@ -136,7 +136,7 @@ end
 # add a service user to tomcat administrators list (alter conf/tomcat-users.xml)
 ruby_block "add-admin" do
     block do
-        admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
+        admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{node[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
         File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml", 'a') do |f|
             f.write("\n#{admin_string}\n")
         end
