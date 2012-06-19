@@ -36,7 +36,24 @@ if File.directory?(node[:tomcat6][:tomcat_home])
         Chef::Log.fatal("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
 end
 
-# TODO user and group management
+# create a user and group for the app to run
+if ! node[:etc][:passwd].keys.index(node[:tomcat6][:user])
+    # create the user only if it doesn't exist
+    group "#{node[:tomcat6][:group]}" do
+        gid node[:tomcat6][:gid]
+        action :create
+    end
+    
+    # TODO user and group management
+    user "#{node[:tomcat6][:user]}" do
+        comment "Tomcat run user"
+        uid node[:tomcat6][:uid]
+        gid node[:tomcat6][:group]
+        home node[:tomcat6][:tomcat_home]
+        shell "/bin/bash"
+        action :create
+    end
+end
 
 # Prepare a temporary directory
 require 'tmpdir'
@@ -114,6 +131,16 @@ ruby_block "move-tomcat-to-tomcat_home" do
     end
 end
 
+# fix config directory permissions
+if node[:tomcat6][:user] != "root"
+    # I don't like using "execute" but ruby's File.chown() required numeric UID and GID
+    execute "fix-config-dir-permissions" do
+        command "chown -R #{node[:tomcat6][:user]}:#{node[:tomcat6][:group]} #{node[:tomcat6][:tomcat_home]}/conf"
+        path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
+        action :run
+    end
+end
+
 # Sometimes it's better to keep config in a some safe place
 if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
     # place config directory in a safe place
@@ -121,8 +148,8 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
         # ensure this place exists
         directory "#{node[:tomcat6][:config_dir]}" do
             action :create
-            owner node[:default_owner]
-            group node[:default_group]
+            owner node[:tomcat6][:default_owner]
+            group node[:tomcat6][:default_group]
             recursive true
         end
         # move the config directory

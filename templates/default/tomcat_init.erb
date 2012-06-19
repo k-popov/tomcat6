@@ -16,7 +16,12 @@ export JAVA_HOME="<%=@node[:tomcat6][:java_home]%>"
 
 case $1 in
     start)
-        <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
+<% if node[:tomcat6][:user] != "root" %>
+	sudo -u <%=@node[:tomcat6][:user]%> -i -- 'export JAVA_HOME="<%=@node[:tomcat6][:java_home]%>"; <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
+<% else %>
+	<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
+<% end %>
+        
         exit 0
     ;;
     stop)
