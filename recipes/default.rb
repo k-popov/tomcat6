@@ -49,26 +49,31 @@ File::chmod(0777, setup_tmp_dir)
 
 # select a version to download
 if ( ! node[:tomcat6][:download_url] ) || node[:tomcat6][:download_url].empty?
-# Find the l7atest tomcat 6 version
+# Find the latest tomcat 6 version
     # get the list
     remote_file "#{setup_tmp_dir}/tomcat_versions.html" do
     source "http://www.sai.msu.su/apache/tomcat/tomcat-6/"
     mode "0644"
     end
 
-    # parse the list
-    latest = ""
-    File.open("#{setup_tmp_dir}/tomcat_versions.html").each_line do |line|
-        if tested = line.match(/v6\.[0-9]+\.[0-9]+/)
-            latest = tested.to_s
+    ruby_block "get-latest-tomcat" do
+        block do
+            # parse the list
+            latest = ""
+            File.open("#{setup_tmp_dir}/tomcat_versions.html").each_line do |line|
+                if tested = line.match(/v6\.[0-9]+\.[0-9]+/)
+                    latest = tested.to_s
+                end
+            end
+            # add a trailing "/" if it's missing
+            url = node[:tomcat6][:download_mirror].match(/\/$/) ? [:tomcat6][:download_mirror] : "#{[:tomcat6][:download_mirror]}/"
+            # build the complete URL. match() is used to remove 'v' in version string
+            url = "#{url}#{latest}/bin/apache-tomcat-#{latest.match(/[0-9.]+/)}.tar.gz"
+            Chef::Log.info("Automatically selected version: #{latest}")
+            Chef::Log.debug("Auto URL for downloading: #{url}")
         end
+        action :create
     end
-    # add a trailing "/" if it's missing
-    url = node[:tomcat6][:download_mirror].match(/\/$/) ? [:tomcat6][:download_mirror] : "#{[:tomcat6][:download_mirror]}/"
-    # build the complete URL. match() is used to remove 'v' in version string
-    url = "#{url}#{latest}/bin/apache-tomcat-#{latest.match(/[0-9.]+/)}.tar.gz"
-    Chef::Log.info("Automatically selected version: #{latest}")
-    Chef::Log.debug("Auto URL for downloading: #{url}")
 else
 # download the version selected
     url = node[:tomcat6][:download_url]
@@ -100,7 +105,12 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
             recursive true
         end
         # move the config directory
-        File.rename("#{node[:tomcat6][:tomcat_home]}/conf", node[:tomcat6][:config_dir])
+        ruby_block "move-config" do
+            block do
+                File.rename("#{node[:tomcat6][:tomcat_home]}/conf", node[:tomcat6][:config_dir])
+            end
+            action :create
+        end
         # compatability link
         link "#{node[:tomcat6][:tomcat_home]}/conf}" do
             to node[:tomcat6][:config_dir]
@@ -112,9 +122,14 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
 end
 
 # add a service user to tomcat administrators list (alter conf/tomcat-users.xml)
-admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
-File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml", 'a') do |f|
-    f.write("\n#{admin_string}\n")
+ruby_block "add-admin" do
+    block do
+        admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
+        File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml", 'a') do |f|
+            f.write("\n#{admin_string}\n")
+        end
+    end
+    action :create
 end
 
 # fix permissions for directories required to be writeable
