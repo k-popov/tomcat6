@@ -8,3 +8,4 @@ version           "0.1"
 end
 
 depends "java"
+depends "apache2"
