@@ -233,8 +233,14 @@ service "tomcat" do
     action [ :enable, :start ]
 end
 
+if node[:tomcat6][:apache_proxy]
+    # include the recipe from site-cookbooks (configure with i.e. JSON file)
+    include_recipe "apache2::default_proxy"
+end
+
 # perform some cleanup
 directory "#{setup_tmp_dir}" do
     action :delete
     recursive true
 end
+

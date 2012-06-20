@@ -40,3 +40,6 @@ default[:tomcat6][:download_mirror] = "http://www.sai.msu.su/apache/tomcat/tomca
 default[:tomcat6][:tomcat_admin_login] = "tc-admin"
 default[:tomcat6][:tomcat_admin_password] = "nimda-ct"
 
+# enable tomcat proxying with apache httpd?
+default[:tomcat6][:apache_proxy] = false
+
