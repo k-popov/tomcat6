@@ -14,6 +14,10 @@ default[:tomcat6][:tomcat_home] = "/opt/tomcat6"
 default[:tomcat6][:config_dir] = "#{node[:tomcat6][:tomcat_home]}/conf"
 # remove the previous tomcat installation or not
 default[:tomcat6][:force_reinstall] = false
+# The recipe will remove all (example) webapps except the ones set here
+# note that only firs level or application context is considered
+default[:tomcat6][:webapps_to_preserve] = ["manager"]
+
 
 # users and groups
 default[:tomcat6][:user] = "root"

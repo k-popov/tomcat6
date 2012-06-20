@@ -198,6 +198,29 @@ end
     end
 end
 
+# remove the example and doc applications
+# prepare resource instance
+rm_apps = directory "example-apps" do
+    action :nothing
+    recursive true
+end
+
+webapps_dir = "#{node[:tomcat6][:tomcat_home]}/webapps"
+ruby_block "remove_standard_webapps" do
+    block do
+        Dir.chdir(webapps_dir)
+        # Dir["*"] will give us all the contents of webapps directory
+        Dir["*"].each do |app|
+            # check if this is an app directory and the app shouldn't be left
+            if File.directory?(app) && ( ! node[:tomcat6][:webapps_to_preserve].index(app) )
+                Chef::Log.info("Removing webapp: #{app}")
+                rm_apps.path app
+                rm_apps.run_action :delete
+            end
+        end
+    end
+end
+
 # Create startup script in /etc/init.d/ directory
 template "/etc/init.d/tomcat" do
     source "tomcat_init.erb"
