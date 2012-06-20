@@ -34,6 +34,7 @@ if File.directory?(node[:tomcat6][:tomcat_home])
         end
     else
         Chef::Log.fatal("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
+    end
 end
 
 # create a user and group for the app to run
@@ -78,8 +79,8 @@ if ( ! node[:tomcat6][:download_url] ) || node[:tomcat6][:download_url].empty?
 # Find the latest tomcat 6 version
     # get the list
     remote_file "#{setup_tmp_dir}/tomcat_versions.html" do
-    source "http://www.sai.msu.su/apache/tomcat/tomcat-6/"
-    mode "0644"
+        source "http://www.sai.msu.su/apache/tomcat/tomcat-6/"
+        mode "0644"
     end
 
     ruby_block "get-latest-tomcat" do
