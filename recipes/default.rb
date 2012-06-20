@@ -25,7 +25,7 @@ if ( node[:tomcat6][:install_java] )
     end
 end
 
-# cleanup the previous installation of requested
+# cleanup the previous installation if requested
 if File.directory?(node[:tomcat6][:tomcat_home])
     if node[:tomcat6][:force_reinstall]
         directory "#{node[:tomcat6][:tomcat_home]}" do
@@ -34,25 +34,6 @@ if File.directory?(node[:tomcat6][:tomcat_home])
         end
     else
         Chef::Log.fatal("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
-    end
-end
-
-# create a user and group for the app to run
-if ! node[:etc][:passwd].keys.index(node[:tomcat6][:user])
-    # create the user only if it doesn't exist
-    group "#{node[:tomcat6][:group]}" do
-        gid node[:tomcat6][:gid]
-        action :create
-    end
-    
-    # TODO user and group management
-    user "#{node[:tomcat6][:user]}" do
-        comment "Tomcat run user"
-        uid node[:tomcat6][:uid]
-        gid node[:tomcat6][:group]
-        home node[:tomcat6][:tomcat_home]
-        shell "/bin/bash"
-        action :create
     end
 end
 
@@ -120,7 +101,7 @@ execute "extract-tomcat" do
     path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
 end
 
-# tomcat will be unpacket to smth like "apache-tomcat-6.X.YZ"
+# tomcat will be unpacked to smth like "apache-tomcat-6.X.YZ"
 # the following block will move it to node[:tomcat6][:config_dir]
 ruby_block "move-tomcat-to-tomcat_home" do
     block do
@@ -129,6 +110,25 @@ ruby_block "move-tomcat-to-tomcat_home" do
 
         # move tomcat to it's home
         File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:tomcat_home])
+    end
+end
+
+# create a user and group for the app to run
+if ! node[:etc][:passwd].keys.index(node[:tomcat6][:user])
+    # create the user only if it doesn't exist
+    group "#{node[:tomcat6][:group]}" do
+        gid node[:tomcat6][:gid]
+        action :create
+    end
+    
+    # TODO user and group management
+    user "#{node[:tomcat6][:user]}" do
+        comment "Tomcat run user"
+        uid node[:tomcat6][:uid]
+        gid node[:tomcat6][:group]
+        home node[:tomcat6][:tomcat_home]
+        shell "/bin/bash"
+        action :create
     end
 end
 
