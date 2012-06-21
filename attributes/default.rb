@@ -32,8 +32,8 @@ default[:tomcat6][:stop] = "/etc/init.d/tomcat stop"
 default[:tomcat6][:restart] = "/etc/init.d/tomcat restart"
 
 # users and groups
-default[:tomcat6][:user] = "root"
-default[:tomcat6][:group] = "root"
+default[:tomcat6][:user] = "tomcat"
+default[:tomcat6][:group] = "tomcat"
 # set if UID and GID if you wish. Commented out by default
 # default[:tomcat6][:uid] = "0"
 # default[:tomcat6][:gid] = "0"
