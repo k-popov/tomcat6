@@ -149,8 +149,8 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
         # ensure this place exists
         directory "#{node[:tomcat6][:config_dir]}" do
             action :create
-            owner node[:tomcat6][:default_owner]
-            group node[:tomcat6][:default_group]
+            owner node[:tomcat6][:user]
+            group node[:tomcat6][:group]
             recursive true
         end
         # move the config directory

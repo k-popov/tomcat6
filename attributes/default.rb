@@ -12,12 +12,24 @@ default[:tomcat6][:java_home] = "/usr/java/default"
 default[:tomcat6][:tomcat_home] = "/opt/tomcat6"
 # may be it's worth placing the configuration directory in a different place (i.e. /usr/local/etc)
 default[:tomcat6][:config_dir] = "#{node[:tomcat6][:tomcat_home]}/conf"
+# compatibility property (ensure there is a triling slash as opscode's tomcat6 cookbook demands)
+default[:tomcat6][:dir] = node[:tomcat6][:config_dir].match(/\/$/) ? node[:tomcat6][:config_dir] : "#{node[:tomcat6][:config_dir]}/"
+# webapps directory
+default[:tomcat6][:webapps] = "#{node[:tomcat6][:tomcat_home]}/webapps/"
+# logs directory
+default[:tomcat6][:logs] = "#{node[:tomcat6][:tomcat_home]}/logs/"
+# tomcat port
+default[:tomcat6][:port] = 8080
 # remove the previous tomcat installation or not
 default[:tomcat6][:force_reinstall] = false
 # The recipe will remove all (example) webapps except the ones set here
 # note that only firs level or application context is considered
 default[:tomcat6][:webapps_to_preserve] = ["manager"]
 
+# start, stop and restart commands
+default[:tomcat6][:start] = "/etc/init.d/tomcat start"
+default[:tomcat6][:stop] = "/etc/init.d/tomcat stop"
+default[:tomcat6][:restart] = "/etc/init.d/tomcat restart"
 
 # users and groups
 default[:tomcat6][:user] = "root"
