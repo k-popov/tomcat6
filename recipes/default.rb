@@ -146,24 +146,10 @@ end
 if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
     # place config directory in a safe place
     if ! File.directory?(node[:tomcat6][:config_dir]) # preserve the existing config dir.
-        # ensure this place exists
-        directory "#{node[:tomcat6][:config_dir]}" do
-            action :create
-            owner node[:tomcat6][:user]
-            group node[:tomcat6][:group]
-            recursive true
-        end
-        # move the config directory
-        ruby_block "move-config" do
-            block do
-                File.rename("#{node[:tomcat6][:tomcat_home]}/conf", node[:tomcat6][:config_dir])
-            end
-            action :create
-        end
-        # compatability link
-        link "#{node[:tomcat6][:tomcat_home]}/conf" do
-            to node[:tomcat6][:config_dir]
-            action :create
+        # use the definition to move the directory and create compatibility link
+        move_tomcat_dir "move-config" do
+            dir_in_home "#{node[:tomcat6][:tomcat_home]}/conf"
+            dir_target node[:tomcat6][:config_dir]
         end
     else
         Chef::Log.info("Config directory #{node[:tomcat6][:config_dir]} exists. Not replacing with a new one.")
@@ -195,6 +181,35 @@ end
         owner node[:tomcat6][:user]
         group node[:tomcat6][:group]
         mode "0755"
+        recursive true
+    end
+end
+
+# move webapps directory into a specified place if needed
+if node[:tomcat6][:webapps] != "#{node[:tomcat6][:tomcat_home]}/webapps"
+    # place webapps directory in another place
+    if ! File.directory?(node[:tomcat6][:webapps]) # preserve the existing webapps dir.
+        # use the definition to move the directory and create compatibility link
+        move_tomcat_dir "move-webapps" do
+            dir_in_home "#{node[:tomcat6][:tomcat_home]}/webapps"
+            dir_target node[:tomcat6][:webapps]
+        end
+    else
+        Chef::Log.info("Webapps directory #{node[:tomcat6][:webapps]} exists. Not replacing with a new one.")
+    end
+end
+
+# move logs directory into a specified place if needed
+if node[:tomcat6][:logs] != "#{node[:tomcat6][:tomcat_home]}/logs"
+    # place logs directory in another place
+    if ! File.directory?(node[:tomcat6][:logs]) # preserve the existing logs dir.
+        # use the definition to move the directory and create compatibility link
+        move_tomcat_dir "move-logs" do
+            dir_in_home "#{node[:tomcat6][:tomcat_home]}/logs"
+            dir_target node[:tomcat6][:logs]
+        end
+    else
+        Chef::Log.info("Logs directory #{node[:tomcat6][:logs]} exists. Not replacing with a new one.")
     end
 end
 
