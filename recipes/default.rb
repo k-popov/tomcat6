@@ -237,13 +237,13 @@ ruby_block "remove_standard_webapps" do
 end
 
 # Create startup script in /etc/init.d/ directory
-template "/etc/init.d/tomcat" do
-    source "tomcat_init.erb"
+template "/etc/init.d/tomcat6" do
+    source "tomcat6_init.erb"
     mode "0755"
 end
 
 # enable and start the service
-service "tomcat" do
+service "tomcat6" do
     supports :restart => true
     action [ :enable, :start ]
 end
