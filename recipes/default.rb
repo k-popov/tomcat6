@@ -143,7 +143,7 @@ if node[:tomcat6][:user] != "root"
 end
 
 # Sometimes it's better to keep config in a some safe place
-if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
+if File.identical?(node[:tomcat6][:config_dir], "#{node[:tomcat6][:tomcat_home]}/conf")
     # place config directory in a safe place
     if ! File.directory?(node[:tomcat6][:config_dir]) # preserve the existing config dir.
         # use the definition to move the directory and create compatibility link
@@ -193,7 +193,7 @@ end
 end
 
 # move webapps directory into a specified place if needed
-if node[:tomcat6][:webapps] != "#{node[:tomcat6][:tomcat_home]}/webapps"
+if File.identical?(node[:tomcat6][:webapps], "#{node[:tomcat6][:tomcat_home]}/webapps")
     # place webapps directory in another place
     if ! File.directory?(node[:tomcat6][:webapps]) # preserve the existing webapps dir.
         # use the definition to move the directory and create compatibility link
@@ -207,7 +207,7 @@ if node[:tomcat6][:webapps] != "#{node[:tomcat6][:tomcat_home]}/webapps"
 end
 
 # move logs directory into a specified place if needed
-if node[:tomcat6][:logs] != "#{node[:tomcat6][:tomcat_home]}/logs"
+if File.identical?(node[:tomcat6][:logs], "#{node[:tomcat6][:tomcat_home]}/logs")
     # place logs directory in another place
     if ! File.directory?(node[:tomcat6][:logs]) # preserve the existing logs dir.
         # use the definition to move the directory and create compatibility link
