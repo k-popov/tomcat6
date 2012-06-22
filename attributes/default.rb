@@ -16,12 +16,13 @@ default[:tomcat6][:config_dir] = "#{node[:tomcat6][:tomcat_home]}/conf"
 default[:tomcat6][:dir] = node[:tomcat6][:config_dir].match(/\/$/) ? node[:tomcat6][:config_dir] : "#{node[:tomcat6][:config_dir]}/"
 # tomcat environmental variables file
 default[:tomcat6][:env_file] = "#{node[:tomcat6][:config_dir]}/tomcat6.conf"
-# tomcat PID file
-default[:tomcat6][:pid_file] = "/var/run/tomcat6.pid"
+
 # webapps directory
 default[:tomcat6][:webapps] = "#{node[:tomcat6][:tomcat_home]}/webapps/"
 # logs directory
 default[:tomcat6][:logs] = "#{node[:tomcat6][:tomcat_home]}/logs/"
+# tomcat PID file
+default[:tomcat6][:pid_file] = "#{node[:tomcat6][:logs]}/tomcat.pid"
 # tomcat port
 default[:tomcat6][:port] = 8080
 # remove the previous tomcat installation or not

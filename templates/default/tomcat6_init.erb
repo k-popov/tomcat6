@@ -19,14 +19,20 @@ TOMCAT_ENV_FILE="<%=@node[:tomcat6][:env_file]%>"
 # read and set environmental variables (added for compatibility reasons)
 while read OPTION_STRING; do
     REGEX='^$|^\ *$'; [[ "$OPTION_STRING" =~ $REGEX ]]  && continue
-    REGEX='^#.*'; [[ "$OPTION_STRING" =~ $REGEX ]]  && continue
-    export $OPTION_STRING
+    REGEX='^\ *#.*'; [[ "$OPTION_STRING" =~ $REGEX ]]  && continue
+    export TMP="$OPTION_STRING"
+    KEY="`echo -n ${TMP} | cut -f 1 -d =`"
+    VALUE="`echo -n ${TMP} | cut -f 2- -d =`"
+    # strip heading and trailing "-marks
+    VALUE="`echo $VALUE | sed -e 's/^"\(.*\)"$/\1/'`"
+    unset TMP
+    export ${KEY}=${VALUE}
 done < $TOMCAT_ENV_FILE
 
 case $1 in
     start)
 <% if node[:tomcat6][:user] != "root" %>
-	sudo -u <%=@node[:tomcat6][:user]%> -i -- 'export JAVA_HOME="<%=@node[:tomcat6][:java_home]%>"; <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
+	sudo -u <%=@node[:tomcat6][:user]%> -E -- '<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
 <% else %>
 	<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
 <% end %>
