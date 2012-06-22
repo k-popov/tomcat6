@@ -32,9 +32,9 @@ done < $TOMCAT_ENV_FILE
 case $1 in
     start)
 <% if node[:tomcat6][:user] != "root" %>
-	sudo -u <%=@node[:tomcat6][:user]%> -E -- '<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
+        su <%=@node[:tomcat6][:user]%> -m -c '<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
 <% else %>
-	<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
+        <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
 <% end %>
         
         exit $?
