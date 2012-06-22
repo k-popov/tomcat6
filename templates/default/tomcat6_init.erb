@@ -14,6 +14,15 @@
 
 export JAVA_HOME="<%=@node[:tomcat6][:java_home]%>"
 
+TOMCAT_ENV_FILE="<%=@node[:tomcat6][:env_file]%>"
+
+# read and set environmental variables (added for compatibility reasons)
+while read OPTION_STRING; do
+    REGEX='^$|^\ *$'; [[ "$OPTION_STRING" =~ $REGEX ]]  && continue
+    REGEX='^#.*'; [[ "$OPTION_STRING" =~ $REGEX ]]  && continue
+    export $OPTION_STRING
+done < $TOMCAT_ENV_FILE
+
 case $1 in
     start)
 <% if node[:tomcat6][:user] != "root" %>

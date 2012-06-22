@@ -14,6 +14,10 @@ default[:tomcat6][:tomcat_home] = "/opt/tomcat6"
 default[:tomcat6][:config_dir] = "#{node[:tomcat6][:tomcat_home]}/conf"
 # compatibility property (ensure there is a triling slash as opscode's tomcat6 cookbook demands)
 default[:tomcat6][:dir] = node[:tomcat6][:config_dir].match(/\/$/) ? node[:tomcat6][:config_dir] : "#{node[:tomcat6][:config_dir]}/"
+# tomcat environmental variables file
+default[:tomcat6][:env_file] = "#{node[:tomcat6][:config_dir]}/tomcat6.conf"
+# tomcat PID file
+default[:tomcat6][:pid_file] = "/var/run/tomcat6.pid"
 # webapps directory
 default[:tomcat6][:webapps] = "#{node[:tomcat6][:tomcat_home]}/webapps/"
 # logs directory
