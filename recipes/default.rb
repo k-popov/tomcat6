@@ -157,7 +157,7 @@ if node[:tomcat6][:config_dir] != "#{node[:tomcat6][:tomcat_home]}/conf"
 end
 
 # create an environmental variables file. Will be read at startup
-template "#{node[:tomcat6][:config_dir]}/#{node[:tomcat6][:env_file}" do
+template "#{node[:tomcat6][:config_dir]}/#{node[:tomcat6][:env_file]}" do
     source "tomcat6_env.erb"
     owner node[:tomcat6][:user]
     group node[:tomcat6][:group]
