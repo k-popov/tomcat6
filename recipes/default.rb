@@ -33,7 +33,7 @@ if File.directory?(node[:tomcat6][:tomcat_home])
             recursive true
         end
     else
-        Chef::Log.fatal("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
+        Chef::Log.info("#{node[:tomcat6][:tomcat_home]} exists and node[:tomcat6][:force_reinstall] not set. Exiting")
     end
 end
 
@@ -93,23 +93,26 @@ end
 
 distr_unpack_dir = File.join( node[:tomcat6][:tomcat_home].split('/')[0..-2],'/')
 
-# extract the distro
-execute "extract-tomcat" do
-    command "tar xvzf #{setup_tmp_dir}/tomcat-distro.tar.gz"
-    # extract the archive to the directory one level higher that tomcat_home
-    cwd distr_unpack_dir
-    path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
-end
-
-# tomcat will be unpacked to smth like "apache-tomcat-6.X.YZ"
-# the following block will move it to node[:tomcat6][:config_dir]
-ruby_block "move-tomcat-to-tomcat_home" do
-    block do
-        #get name of the directory the distr was unpacked to
-        tomcat_unpacked_name = url.split('/')[-1].gsub(/(.*)\.tar\.gz/, '\1')
-
-        # move tomcat to it's home
-        File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:tomcat_home])
+if ( ! File.directory?(node[:tomcat6][:tomcat_home]) ) || node[:tomcat6][:force_reinstall]
+    # do only if there is no tomcat in the directory or if force_reinstall set
+    # extract the distro
+    execute "extract-tomcat" do
+        command "tar xvzf #{setup_tmp_dir}/tomcat-distro.tar.gz"
+        # extract the archive to the directory one level higher that tomcat_home
+        cwd distr_unpack_dir
+        path [ "/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin" ]
+    end
+    
+    # tomcat will be unpacked to smth like "apache-tomcat-6.X.YZ"
+    # the following block will move it to node[:tomcat6][:config_dir]
+    ruby_block "move-tomcat-to-tomcat_home" do
+        block do
+            #get name of the directory the distr was unpacked to
+            tomcat_unpacked_name = url.split('/')[-1].gsub(/(.*)\.tar\.gz/, '\1')
+    
+            # move tomcat to it's home
+            File.rename("#{distr_unpack_dir}/#{tomcat_unpacked_name}", node[:tomcat6][:tomcat_home])
+        end
     end
 end
 
@@ -145,16 +148,33 @@ end
 # Sometimes it's better to keep config in a some safe place
 if File.identical?(node[:tomcat6][:config_dir], "#{node[:tomcat6][:tomcat_home]}/conf")
     # place config directory in a safe place
-    if ! File.directory?(node[:tomcat6][:config_dir]) # preserve the existing config dir.
+    if File.directory?(node[:tomcat6][:config_dir])
+        if node[:tomcat6][:force_reinstall]
+            # wipe config directory
+            directory node[:tomcat6][:config_dir] do
+                action :delete
+                recursive true
+            end
+            link "#{node[:tomcat6][:tomcat_home]}/conf" do
+                action :delete
+            end
+            # use the definition to move the directory and create compatibility link
+            move_tomcat_dir "move-config" do
+                dir_in_home "#{node[:tomcat6][:tomcat_home]}/conf"
+                dir_target node[:tomcat6][:config_dir]
+            end
+        else
+            # preserve the existing config dir
+            Chef::Log.info("Config directory #{node[:tomcat6][:config_dir]} exists. Not replacing with a new one.")
+        end
+    else # if there is no config directory in the place
         # use the definition to move the directory and create compatibility link
         move_tomcat_dir "move-config" do
             dir_in_home "#{node[:tomcat6][:tomcat_home]}/conf"
             dir_target node[:tomcat6][:config_dir]
         end
-    else
-        Chef::Log.info("Config directory #{node[:tomcat6][:config_dir]} exists. Not replacing with a new one.")
-    end
-end
+    end # if config directory exist
+end # if location is outside home directory
 
 # create an environmental variables file. Will be read at startup
 template "#{node[:tomcat6][:env_file]}" do
@@ -168,12 +188,14 @@ ruby_block "add-admin" do
     block do
         admin_string = "<user username=\"#{node[:tomcat6][:tomcat_admin_login]}\" password=\"#{node[:tomcat6][:tomcat_admin_password]}\" roles=\"manager-gui,manager\"/>"
         orig_lines = File.readlines("#{node[:tomcat6][:config_dir]}/tomcat-users.xml")
-
-        File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml",'w') do |thefile|
-            orig_lines.each do |line|
-                thefile.write(line)
-                if line.match('<tomcat-users>')
-                    thefile.write("#{admin_string}\n")
+        if ! orig_lines.index("#{admin_string}\n")
+            # only if there is no such admin already
+            File.open("#{node[:tomcat6][:config_dir]}/tomcat-users.xml",'w') do |thefile|
+                orig_lines.each do |line|
+                    thefile.write(line)
+                    if line.match('<tomcat-users>')
+                        thefile.write("#{admin_string}\n")
+                    end
                 end
             end
         end
@@ -194,31 +216,59 @@ end
 
 # move webapps directory into a specified place if needed
 if File.identical?(node[:tomcat6][:webapps], "#{node[:tomcat6][:tomcat_home]}/webapps")
-    # place webapps directory in another place
-    if ! File.directory?(node[:tomcat6][:webapps]) # preserve the existing webapps dir.
+    if File.directory?(node[:tomcat6][:webapps])
+        if node[:tomcat6][:force_reinstall]
+            # wipe webapps directory
+
+            # move webapps directory
+            move_tomcat_dir "move-webapps" do
+                dir_in_home "#{node[:tomcat6][:tomcat_home]}/webapps"
+                dir_target node[:tomcat6][:webapps]
+            end
+        else
+            Chef::Log.info("Webapps directory #{node[:tomcat6][:webapps]} exists. Not replacing with a new one.")
+            # preserve webapps directory
+        end
+    else
+        # place webapps directory in another place
         # use the definition to move the directory and create compatibility link
         move_tomcat_dir "move-webapps" do
             dir_in_home "#{node[:tomcat6][:tomcat_home]}/webapps"
             dir_target node[:tomcat6][:webapps]
         end
-    else
-        Chef::Log.info("Webapps directory #{node[:tomcat6][:webapps]} exists. Not replacing with a new one.")
     end
-end
+end # if webapps outside of tomcat home
 
 # move logs directory into a specified place if needed
 if File.identical?(node[:tomcat6][:logs], "#{node[:tomcat6][:tomcat_home]}/logs")
     # place logs directory in another place
-    if ! File.directory?(node[:tomcat6][:logs]) # preserve the existing logs dir.
+    if File.directory?(node[:tomcat6][:logs])
+        if node[:tomcat6][:force_reinstall]
+            # wipe logs directory
+            directory node[:tomcat6][:logs] do
+                action :delete
+                recursive true
+            end
+            link "#{node[:tomcat6][:tomcat_home]}/logs" do
+                action :delete
+            end
+            # use the definition to move the directory and create compatibility link
+            move_tomcat_dir "move-logs" do
+                dir_in_home "#{node[:tomcat6][:tomcat_home]}/logs"
+                dir_target node[:tomcat6][:logs]
+            end
+        else
+            # log message
+            Chef::Log.info("Logs directory #{node[:tomcat6][:logs]} exists. Not replacing with a new one.")
+        end
+    else # if logs directory doesn't exist
         # use the definition to move the directory and create compatibility link
         move_tomcat_dir "move-logs" do
             dir_in_home "#{node[:tomcat6][:tomcat_home]}/logs"
             dir_target node[:tomcat6][:logs]
         end
-    else
-        Chef::Log.info("Logs directory #{node[:tomcat6][:logs]} exists. Not replacing with a new one.")
     end
-end
+end # if logs outside tomcat home
 
 # remove the example and doc applications
 # prepare resource instance
@@ -231,10 +281,8 @@ webapps_dir = "#{node[:tomcat6][:tomcat_home]}/webapps"
 ruby_block "remove_standard_webapps" do
     block do
         Dir.chdir(webapps_dir)
-        # Dir["*"] will give us all the contents of webapps directory
-        Dir["*"].each do |app|
-            # check if this is an app directory and the app shouldn't be left
-            if File.directory?(app) && ( ! node[:tomcat6][:webapps_to_preserve].index(app) )
+        node[:tomcat6][:webapps_to_delete].each do |app|
+            if File.directory?(app) # only if there IS such webapp
                 Chef::Log.info("Removing webapp: #{app}")
                 rm_apps.path app
                 rm_apps.run_action :delete

@@ -27,9 +27,8 @@ default[:tomcat6][:pid_file] = "#{node[:tomcat6][:logs]}/tomcat.pid"
 default[:tomcat6][:port] = 8080
 # remove the previous tomcat installation or not
 default[:tomcat6][:force_reinstall] = false
-# The recipe will remove all (example) webapps except the ones set here
-# note that only firs level or application context is considered
-default[:tomcat6][:webapps_to_preserve] = ["manager"]
+# The recipe can remove example webapps. The default list is here. (leaves "manager" working!)
+default[:tomcat6][:webapps_to_delete] = ["docs", "examples", "host-manager", "ROOT"]
 
 # start, stop and restart commands
 default[:tomcat6][:start] = "/etc/init.d/tomcat start"
