@@ -145,6 +145,20 @@ if node[:tomcat6][:user] != "root"
     end
 end
 
+# check that tomcat-julu.jar *is* in classpath
+java_classpath =  node[:tomcat6][:classpath].match("tomcat-juli.jar") ?
+    node[:tomcat6][:classpath] :
+    "#{node[:tomcat6][:tomcat_home]}/bin/tomcat-juli.jar:#{node[:tomcat6][:classpath]}"
+
+# this script will be evaluated on tomcat startup
+template "#{node[:tomcat6][:tomcat_home]}/bin/setenv.sh" do
+    source "setenv.sh.erb"
+    variables(
+        :cp => java_classpath
+    )
+    mode "0755"
+end
+
 # Sometimes it's better to keep config in a some safe place
 if File.identical?(node[:tomcat6][:config_dir], "#{node[:tomcat6][:tomcat_home]}/conf")
     # place config directory in a safe place

@@ -25,6 +25,9 @@ default[:tomcat6][:logs] = "#{node[:tomcat6][:tomcat_home]}/logs/"
 default[:tomcat6][:pid_file] = "#{node[:tomcat6][:logs]}/tomcat.pid"
 # tomcat port
 default[:tomcat6][:port] = 8080
+# Set alternative classpath
+# Add what is needed but "tomcat-juli.jar" *should* be there, will be preserved.
+default[:tomcat6][:classpath] = "#{node[:tomcat6][:tomcat_home]}/bin/tomcat-juli.jar"
 # remove the previous tomcat installation or not
 default[:tomcat6][:force_reinstall] = false
 # The recipe can remove example webapps. The default list is here. (leaves "manager" working!)
