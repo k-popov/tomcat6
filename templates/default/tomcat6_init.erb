@@ -15,6 +15,8 @@
 export JAVA_HOME="<%=@node[:tomcat6][:java_home]%>"
 
 TOMCAT_ENV_FILE="<%=@node[:tomcat6][:env_file]%>"
+# PID file location may be overriden in $TOMCAT_ENV_FILE
+CATALINA_PID="<%=@node[:tomcat6][:pid_file]%>"
 
 # read and set environmental variables (added for compatibility reasons)
 while read OPTION_STRING; do
@@ -32,7 +34,7 @@ done < $TOMCAT_ENV_FILE
 case $1 in
     start)
 <% if node[:tomcat6][:user] != "root" %>
-        su <%=@node[:tomcat6][:user]%> -m -c '<%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
+        su <%=@node[:tomcat6][:user]%> -m -c 'cd <%=@node[:tomcat6][:tomcat_home]%>; <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh'
 <% else %>
         <%=@node[:tomcat6][:tomcat_home]%>/bin/startup.sh
 <% end %>
@@ -41,7 +43,10 @@ case $1 in
     ;;
     stop)
         <%=@node[:tomcat6][:tomcat_home]%>/bin/shutdown.sh
-        exit $?
+        if [ -f "$CATALINA_PID" ]; then
+            kill `cat $CATALINA_PID`
+            rm -f "$CATALINA_PID"
+        exit 0
     ;;
     restart)
         $0 stop

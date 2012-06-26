@@ -135,6 +135,12 @@ if ! node[:etc][:passwd].keys.index(node[:tomcat6][:user])
     end
 end
 
+directory "#{node[:tomcat6][:tomcat_home]}/target/config" do
+    action :create
+    recursive true
+    mode "0755"
+end
+
 # fix config directory permissions
 if node[:tomcat6][:user] != "root"
     # I don't like using "execute" but ruby's File.chown() required numeric UID and GID
