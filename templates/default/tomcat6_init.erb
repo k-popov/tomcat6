@@ -46,6 +46,7 @@ case $1 in
         if [ -f "$CATALINA_PID" ]; then
             kill `cat $CATALINA_PID`
             rm -f "$CATALINA_PID"
+        fi
         exit 0
     ;;
     restart)
